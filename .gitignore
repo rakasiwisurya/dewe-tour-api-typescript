@@ -1,0 +1,3 @@
+/node_modules
+/uploads/*\n!no-photo.jpg
+/uploads/*\n!.gitkeep
