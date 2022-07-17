@@ -8,7 +8,4 @@ const pg_promise_1 = __importDefault(require("pg-promise"));
 const pgp = (0, pg_promise_1.default)({
 /* Initialization Options */
 });
-exports.db = pgp(`postgres://postgres:root@localhost:5432/db_dewe_tour`);
-// export const db = pgp(
-//   `postgres://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
-// );
+exports.db = pgp(`postgres://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
