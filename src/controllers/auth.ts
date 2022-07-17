@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import Joi from "joi";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { db } from "../../db";
+import { db } from "../db";
+import { tokenKey } from "../constants";
 
 export const register = async (req: Request, res: Response) => {
   const { fullname, email, password, phone, gender_id, address } = req.body;
@@ -121,7 +122,6 @@ export const login = async (req: Request, res: Response) => {
 
     delete user.password;
 
-    const tokenKey = "TStWZhXcYsGN5XsgJH3YBM04ca6qKA2Ch5ZSFS8E";
     const token = jwt.sign(user, process.env.TOKEN_KEY || tokenKey, {
       expiresIn: "6h",
     });
