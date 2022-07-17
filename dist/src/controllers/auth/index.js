@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.register = void 0;
+exports.login = exports.register = void 0;
 const joi_1 = __importDefault(require("joi"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -45,8 +45,21 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashedPassword = yield bcrypt_1.default.hash(password, salt);
-        const queryInsertUser = "INSERT INTO users(fullname, email, password, phone, gender_id, address, role) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING user_id, fullname, email, phone, gender_id, address, role";
-        const newUser = yield db_1.db.one(queryInsertUser, [
+        const queryInsertUser = `
+      INSERT INTO users
+        (fullname, email, password, phone, gender_id, address, role)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING
+        user_id,
+        fullname,
+        email,
+        phone,
+        gender_id,
+        address,
+        role
+    `;
+        const data = yield db_1.db.one(queryInsertUser, [
             fullname,
             email,
             hashedPassword,
@@ -55,17 +68,10 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             address,
             "user",
         ]);
-        const queryGenderByGenderId = "SELECT * FROM genders WHERE gender_id = $1";
-        const gender = yield db_1.db.one(queryGenderByGenderId, [newUser.gender_id]);
-        delete newUser.gender_id;
-        const tokeyKey = "TStWZhXcYsGN5XsgJH3YBM04ca6qKA2Ch5ZSFS8E";
-        const token = jsonwebtoken_1.default.sign(Object.assign(Object.assign({}, newUser), { gender: gender.gender_name }), process.env.TOKEN_KEY || tokeyKey, {
-            expiresIn: "6h",
-        });
         res.status(200).send({
             status: "Success",
             message: "Register Success",
-            data: Object.assign(Object.assign({}, newUser), { gender: gender.gender_name, token }),
+            data,
         });
     }
     catch (error) {
@@ -77,3 +83,57 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.register = register;
+const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    const schema = joi_1.default.object({
+        email: joi_1.default.string().email().required(),
+        password: joi_1.default.string().required(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error) {
+        return res.status(400).send({
+            status: "Failed",
+            message: error.details[0].message,
+        });
+    }
+    try {
+        const queryCheckUser = `
+      SELECT
+        *
+      FROM 
+        users
+      LEFT JOIN
+        genders
+      ON
+        users.gender_id = genders.gender_id
+      WHERE
+        email = $1
+    `;
+        const user = yield db_1.db.oneOrNone(queryCheckUser, [email]);
+        const isValid = yield bcrypt_1.default.compare(password, user.password);
+        if (!user || !isValid) {
+            return res.status(400).send({
+                status: "Failed",
+                message: "Email or password doesn't correct",
+            });
+        }
+        delete user.password;
+        const tokenKey = "TStWZhXcYsGN5XsgJH3YBM04ca6qKA2Ch5ZSFS8E";
+        const token = jsonwebtoken_1.default.sign(user, process.env.TOKEN_KEY || tokenKey, {
+            expiresIn: "6h",
+        });
+        res.status(200).send({
+            status: "Success",
+            message: "Login success",
+            data: Object.assign(Object.assign({}, user), { token }),
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.login = login;
