@@ -8,7 +8,7 @@
     "start": "node dist/app.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\"",
     "client": "npm start --prefix ../client",
-    "serve": "concurrently \"npm dev\" \"npm run client\""
+    "serve": "concurrently \"npx tsc --watch\" \"nodemon -q dist/app.js\" \"npm run client\""
   },
   "keywords": [],
   "author": "Rakasiwi Surya",

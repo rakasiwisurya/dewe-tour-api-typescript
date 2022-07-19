@@ -8,26 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUser = void 0;
+exports.updateUser = exports.getUser = void 0;
+const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
+const user_1 = require("../models/user");
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
-        const queryUser = `
-      SELECT
-        fullname,
-        email,
-        phone,
-        gender_id,
-        address,
-        avatar
-      FROM
-        users
-      WHERE
-        user_id = $1
-    `;
-        const data = yield db_1.db.one(queryUser, [id]);
+        const data = yield db_1.db.one(user_1.queryGetUser, [id]);
         res.status(200).send({
             status: "Success",
             message: "Sucess get detail user",
@@ -43,3 +35,37 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getUser = getUser;
+const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { fullname, phone, address, gender_id } = req.body;
+    const { id } = req.params;
+    const schema = joi_1.default.object({
+        fullname: joi_1.default.string().optional(),
+        phone: joi_1.default.number().min(10).optional(),
+        address: joi_1.default.string().min(10).optional(),
+        gender_id: joi_1.default.number().optional(),
+    });
+    const { error } = schema.validate(req.body);
+    if (error) {
+        return res.status(400).send({
+            status: "Failed",
+            message: error.details[0].message,
+        });
+    }
+    try {
+        yield db_1.db.none(user_1.queryUpdateUser, [id, fullname, phone, address, gender_id]);
+        const data = yield db_1.db.one(user_1.queryGetUser, [id]);
+        res.status(200).send({
+            status: "Success",
+            message: "Success update user",
+            data,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.updateUser = updateUser;

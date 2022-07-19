@@ -8,4 +8,5 @@ const router = (0, express_1.Router)();
 router.post("/register", auth_2.register);
 router.post("/login", auth_2.login);
 router.get("/users/:id", auth_1.auth, user_1.getUser);
+router.put("/users/:id", auth_1.auth, user_1.updateUser);
 exports.default = router;
