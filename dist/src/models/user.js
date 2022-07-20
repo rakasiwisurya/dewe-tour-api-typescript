@@ -1,6 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryUpdateUser = exports.queryGetUser = void 0;
+exports.queryUpdateUser = exports.queryGetUser = exports.queryInsertUser = exports.queryCheckEmail = void 0;
+exports.queryCheckEmail = `
+SELECT
+  *
+FROM
+  users
+WHERE
+  email = $1
+`;
+exports.queryInsertUser = `
+INSERT INTO users
+  (fullname, email, password, phone, gender_id, address, role)
+VALUES
+  ($1, $2, $3, $4, $5, $6, $7)
+RETURNING
+  user_id,
+  fullname,
+  email,
+  phone,
+  gender_id,
+  address,
+  role
+`;
 exports.queryGetUser = `
 SELECT
   fullname,

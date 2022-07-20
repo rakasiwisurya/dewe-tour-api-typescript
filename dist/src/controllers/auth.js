@@ -18,6 +18,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_1 = require("../db");
 const constants_1 = require("../constants");
+const user_1 = require("../models/user");
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fullname, email, password, phone, gender_id, address } = req.body;
     const schema = joi_1.default.object({
@@ -36,8 +37,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     try {
-        const queryCheckEmail = "SELECT * FROM users WHERE email = $1";
-        const userData = yield db_1.db.oneOrNone(queryCheckEmail, [email]);
+        const userData = yield db_1.db.oneOrNone(user_1.queryCheckEmail, [email]);
         if (userData) {
             return res.status(400).send({
                 status: "Failed",
@@ -46,21 +46,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashedPassword = yield bcrypt_1.default.hash(password, salt);
-        const queryInsertUser = `
-      INSERT INTO users
-        (fullname, email, password, phone, gender_id, address, role)
-      VALUES
-        ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING
-        user_id,
-        fullname,
-        email,
-        phone,
-        gender_id,
-        address,
-        role
-    `;
-        const data = yield db_1.db.one(queryInsertUser, [
+        const data = yield db_1.db.one(user_1.queryInsertUser, [
             fullname,
             email,
             hashedPassword,

@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { db } from "../db";
 import { tokenKey } from "../constants";
+import { queryCheckEmail, queryInsertUser } from "../models/user";
 
 export const register = async (req: Request, res: Response) => {
   const { fullname, email, password, phone, gender_id, address } = req.body;
@@ -27,7 +28,6 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
-    const queryCheckEmail = "SELECT * FROM users WHERE email = $1";
     const userData = await db.oneOrNone(queryCheckEmail, [email]);
 
     if (userData) {
@@ -39,21 +39,6 @@ export const register = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    const queryInsertUser = `
-      INSERT INTO users
-        (fullname, email, password, phone, gender_id, address, role)
-      VALUES
-        ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING
-        user_id,
-        fullname,
-        email,
-        phone,
-        gender_id,
-        address,
-        role
-    `;
 
     const data = await db.one(queryInsertUser, [
       fullname,
