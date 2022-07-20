@@ -50,7 +50,7 @@ export const register = async (req: Request, res: Response) => {
       "user",
     ]);
 
-    res.status(200).send({
+    res.status(201).send({
       status: "Success",
       message: "Register Success",
       data,

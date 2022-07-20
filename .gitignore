@@ -1,3 +1,6 @@
 /node_modules
-/uploads/*\n!no-photo.jpg
-/uploads/*\n!.gitkeep
+/uploads/avatars/*
+!/uploads/avatars/no-photo.jpg
+!/uploads/avatars/.gitkeep
+/uploads/trips/*
+!/uploads/trips/.gitkeep

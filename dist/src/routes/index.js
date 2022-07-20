@@ -2,9 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../middlewares/auth");
+const fileHandler_1 = require("../middlewares/fileHandler");
 const auth_2 = require("../controllers/auth");
 const user_1 = require("../controllers/user");
 const country_1 = require("../controllers/country");
+const trip_1 = require("../controllers/trip");
 const router = (0, express_1.Router)();
 router.post("/register", auth_2.register);
 router.post("/login", auth_2.login);
@@ -12,4 +14,5 @@ router.get("/users/:id", auth_1.auth, user_1.getUser);
 router.put("/users/:id", auth_1.auth, user_1.updateUser);
 router.post("/countries", auth_1.auth, country_1.addCountry);
 router.get("/countries", auth_1.auth, country_1.getCountries);
+router.post("/trips", auth_1.auth, (0, fileHandler_1.uploadFiles)("trip_images", "uploads/trips"), trip_1.addTrip);
 exports.default = router;

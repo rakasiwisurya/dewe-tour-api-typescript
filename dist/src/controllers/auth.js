@@ -55,7 +55,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             address,
             "user",
         ]);
-        res.status(200).send({
+        res.status(201).send({
             status: "Success",
             message: "Register Success",
             data,
