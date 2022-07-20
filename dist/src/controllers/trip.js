@@ -107,7 +107,7 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             const trips = yield db_1.db.manyOrNone(trip_1.queryGetTripsByKeyword, [`%${keyword}%`]);
             data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
                 const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
-                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}` })));
+                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
                 return Object.assign(Object.assign({}, trip), { trip_images });
             })));
         }
@@ -115,7 +115,7 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             const trips = yield db_1.db.manyOrNone(trip_1.queryGetTrips);
             data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
                 const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
-                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}` })));
+                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
                 return Object.assign(Object.assign({}, trip), { trip_images });
             })));
         }
@@ -139,7 +139,7 @@ const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let data = yield db_1.db.one(trip_1.queryGetDetailTrip, [id]);
         const trip_images = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [data.trip_image_code]);
-        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: `${process.env.BASE_URL}${trip_image.trip_image_name}` })));
+        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${trip_image.trip_image_name}` })));
         res.status(200).send({
             status: "Success",
             message: "Success get detail trip",

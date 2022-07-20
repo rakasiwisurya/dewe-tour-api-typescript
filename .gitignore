@@ -2,5 +2,7 @@
 /uploads/avatars/*
 !/uploads/avatars/no-photo.jpg
 !/uploads/avatars/.gitkeep
+/uploads/proofs/*
+!/uploads/proofs/.gitkeep
 /uploads/trips/*
 !/uploads/trips/.gitkeep

@@ -12,7 +12,12 @@ export const getUser = async (req: Request, res: Response) => {
     if (data.avatar) {
       data = {
         ...data,
-        avatar: `${process.env.BASE_URL}${data.avatar}`,
+        avatar: `${process.env.BASE_URL_UPLOAD}/avatars/${data.avatar}`,
+      };
+    } else {
+      data = {
+        ...data,
+        avatar: `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg`,
       };
     }
 

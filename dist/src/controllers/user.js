@@ -21,7 +21,10 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let data = yield db_1.db.one(user_1.queryGetUser, [id]);
         if (data.avatar) {
-            data = Object.assign(Object.assign({}, data), { avatar: `${process.env.BASE_URL}${data.avatar}` });
+            data = Object.assign(Object.assign({}, data), { avatar: `${process.env.BASE_URL_UPLOAD}/avatars/${data.avatar}` });
+        }
+        else {
+            data = Object.assign(Object.assign({}, data), { avatar: `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg` });
         }
         res.status(200).send({
             status: "Success",

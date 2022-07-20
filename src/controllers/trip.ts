@@ -114,7 +114,7 @@ export const getTrips = async (req: Request, res: Response) => {
 
           const trip_images = tripImages.map((tripImage) => ({
             ...tripImage,
-            trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}`,
+            trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
           }));
 
           return { ...trip, trip_images };
@@ -129,7 +129,7 @@ export const getTrips = async (req: Request, res: Response) => {
 
           const trip_images = tripImages.map((tripImage) => ({
             ...tripImage,
-            trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}`,
+            trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
           }));
 
           return { ...trip, trip_images };
@@ -161,7 +161,7 @@ export const getTrip = async (req: Request, res: Response) => {
 
     data.trip_images = trip_images.map((trip_image) => ({
       ...trip_image,
-      trip_image_url: `${process.env.BASE_URL}${trip_image.trip_image_name}`,
+      trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${trip_image.trip_image_name}`,
     }));
 
     res.status(200).send({
