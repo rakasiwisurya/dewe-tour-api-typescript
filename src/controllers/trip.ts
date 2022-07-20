@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 import Joi from "joi";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
-import { queryGetTrips, queryGetTripsByKeyword, queryInsertTrip } from "../models/trip";
+import {
+  queryGetDetailTrip,
+  queryGetTrips,
+  queryGetTripsByKeyword,
+  queryInsertTrip,
+} from "../models/trip";
 import {
   queryGetImageByImageCode,
   queryGetImageCodeByLastData,
@@ -115,7 +120,7 @@ export const getTrips = async (req: Request, res: Response) => {
         })
       );
     } else {
-      const trips = await db.many(queryGetTrips);
+      const trips = await db.manyOrNone(queryGetTrips);
 
       data = await Promise.all(
         trips.map(async (trip) => {
@@ -134,6 +139,33 @@ export const getTrips = async (req: Request, res: Response) => {
     res.status(200).send({
       status: "Success",
       message: "Success get all trip",
+      data,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      status: "Failed",
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getTrip = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    let data = await db.one(queryGetDetailTrip, [id]);
+
+    const trip_images = await db.many(queryGetImageByImageCode, [data.trip_image_code]);
+
+    data.trip_images = trip_images.map((trip_image) => ({
+      ...trip_image,
+      trip_image_url: `${process.env.BASE_URL}${trip_image.trip_image_name}`,
+    }));
+
+    res.status(200).send({
+      status: "Success",
+      message: "Success get detail trip",
       data,
     });
   } catch (error) {

@@ -19,7 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrips = exports.addTrip = void 0;
+exports.getTrip = exports.getTrips = exports.addTrip = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
@@ -112,7 +112,7 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             })));
         }
         else {
-            const trips = yield db_1.db.many(trip_1.queryGetTrips);
+            const trips = yield db_1.db.manyOrNone(trip_1.queryGetTrips);
             data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
                 const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
                 const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}` })));
@@ -134,3 +134,24 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getTrips = getTrips;
+const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        let data = yield db_1.db.one(trip_1.queryGetDetailTrip, [id]);
+        const trip_images = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [data.trip_image_code]);
+        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: `${process.env.BASE_URL}${trip_image.trip_image_name}` })));
+        res.status(200).send({
+            status: "Success",
+            message: "Success get detail trip",
+            data,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.getTrip = getTrip;

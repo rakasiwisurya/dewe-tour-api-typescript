@@ -48,3 +48,12 @@ WHERE
 ILIKE
   $1
 `;
+
+export const queryGetDetailTrip = `
+SELECT
+  *
+FROM
+  trips
+WHERE
+  trip_id = $1
+`;
