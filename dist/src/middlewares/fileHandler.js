@@ -44,22 +44,22 @@ const uploadFiles = (uploadedFilename, location) => {
     return (req, res, next) => {
         upload(req, res, (error) => {
             if (req.fileValidationError)
-                return res.status(400).send(req.fileValidationError);
+                return res.status(422).send(req.fileValidationError);
             if (error) {
                 console.error(error);
                 if (error.code === "LIMIT_FILE_SIZE") {
-                    return res.status(400).send({
+                    return res.status(422).send({
                         status: "Failed File Handler",
                         message: `Max file sized is ${sizeInMB}MB`,
                     });
                 }
                 if (error.code === "LIMIT_UNEXPECTED_FILE") {
-                    return res.status(400).send({
+                    return res.status(422).send({
                         status: "Failed File Handler",
                         message: `Max file is ${maxFiles} files`,
                     });
                 }
-                return res.status(400).send(error);
+                return res.status(422).send(error);
             }
             return next();
         });
@@ -99,16 +99,16 @@ const uploadFile = (uploadedFilename, location) => {
     return (req, res, next) => {
         upload(req, res, (error) => {
             if (req.fileValidationError)
-                return res.status(400).send(req.fileValidationError);
+                return res.status(422).send(req.fileValidationError);
             if (error) {
                 console.error(error);
                 if (error.code === "LIMIT_FILE_SIZE") {
-                    return res.status(400).send({
+                    return res.status(422).send({
                         status: "Failed File Handler",
                         message: `Max file sized is ${sizeInMB}MB`,
                     });
                 }
-                return res.status(400).send(error);
+                return res.status(422).send(error);
             }
             return next();
         });

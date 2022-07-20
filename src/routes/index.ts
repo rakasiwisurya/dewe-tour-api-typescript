@@ -1,10 +1,10 @@
 import { Router } from "express";
 
 import { auth } from "../middlewares/auth";
-import { uploadFiles } from "../middlewares/fileHandler";
+import { uploadFile, uploadFiles } from "../middlewares/fileHandler";
 
 import { login, register } from "../controllers/auth";
-import { getUser, updateUser } from "../controllers/user";
+import { getUser, updateAvatar, updateUser } from "../controllers/user";
 import { addCountry, getCountries } from "../controllers/country";
 import { addTrip } from "../controllers/trip";
 
@@ -14,7 +14,8 @@ router.post("/register", register);
 router.post("/login", login);
 
 router.get("/users/:id", auth, getUser);
-router.put("/users/:id", auth, updateUser);
+router.put("/users/data/:id", auth, updateUser);
+router.put("/users/image/:id", auth, uploadFile("avatar", "uploads/avatars"), updateAvatar);
 
 router.post("/countries", auth, addCountry);
 router.get("/countries", auth, getCountries);

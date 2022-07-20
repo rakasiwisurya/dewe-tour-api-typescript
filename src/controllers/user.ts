@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Joi from "joi";
 import { db } from "../db";
-import { queryGetUser, queryUpdateUser } from "../models/user";
+import { queryGetUser, queryUpdateAvatar, queryUpdateUser } from "../models/user";
 
 export const getUser = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -52,6 +52,25 @@ export const updateUser = async (req: Request, res: Response) => {
       status: "Success",
       message: "Success update user",
       data,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      status: "Failed",
+      message: "Internal server error",
+    });
+  }
+};
+
+export const updateAvatar = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await db.none(queryUpdateAvatar, [id, req.file?.filename]);
+
+    res.status(200).send({
+      status: "Success",
+      message: "Success update avatar",
     });
   } catch (error) {
     console.error(error);

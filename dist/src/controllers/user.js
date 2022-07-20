@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUser = exports.getUser = void 0;
+exports.updateAvatar = exports.updateUser = exports.getUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
 const user_1 = require("../models/user");
@@ -69,3 +69,22 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.updateUser = updateUser;
+const updateAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { id } = req.params;
+    try {
+        yield db_1.db.none(user_1.queryUpdateAvatar, [id, (_a = req.file) === null || _a === void 0 ? void 0 : _a.filename]);
+        res.status(200).send({
+            status: "Success",
+            message: "Success update avatar",
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.updateAvatar = updateAvatar;

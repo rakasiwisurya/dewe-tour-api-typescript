@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryUpdateUser = exports.queryGetUser = exports.queryInsertUser = exports.queryCheckEmail = void 0;
+exports.queryUpdateAvatar = exports.queryUpdateUser = exports.queryGetUser = exports.queryInsertUser = exports.queryCheckEmail = void 0;
 exports.queryCheckEmail = `
 SELECT
   *
@@ -44,6 +44,14 @@ SET
   phone = $3,
   address = $4,
   gender_id = $5
+WHERE
+  user_id = $1
+`;
+exports.queryUpdateAvatar = `
+UPDATE
+  users
+SET
+  avatar = $2
 WHERE
   user_id = $1
 `;

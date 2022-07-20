@@ -47,3 +47,12 @@ SET
 WHERE
   user_id = $1
 `;
+
+export const queryUpdateAvatar = `
+UPDATE
+  users
+SET
+  avatar = $2
+WHERE
+  user_id = $1
+`;
