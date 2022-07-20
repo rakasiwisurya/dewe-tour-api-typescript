@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAvatar = exports.updateUser = exports.getUser = void 0;
+exports.deleteUser = exports.updateAvatar = exports.updateUser = exports.getUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
 const user_1 = require("../models/user");
@@ -91,3 +91,21 @@ const updateAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.updateAvatar = updateAvatar;
+const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        yield db_1.db.none(user_1.queryDeleteUser, [id]);
+        res.status(200).send({
+            status: "Success",
+            message: "Success delete user",
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.deleteUser = deleteUser;

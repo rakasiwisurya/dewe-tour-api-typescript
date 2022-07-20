@@ -57,3 +57,10 @@ FROM
 WHERE
   trip_id = $1
 `;
+
+export const queryDeleteTrip = `
+DELETE FROM
+  trips
+WHERE
+  trip_id = $1
+`;

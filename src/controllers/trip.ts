@@ -3,6 +3,7 @@ import Joi from "joi";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
 import {
+  queryDeleteTrip,
   queryGetDetailTrip,
   queryGetTrips,
   queryGetTripsByKeyword,
@@ -167,6 +168,25 @@ export const getTrip = async (req: Request, res: Response) => {
       status: "Success",
       message: "Success get detail trip",
       data,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      status: "Failed",
+      message: "Internal server error",
+    });
+  }
+};
+
+export const deleteTrip = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await db.none(queryDeleteTrip, [id]);
+
+    res.status(200).send({
+      status: "Success",
+      message: "Success delete trip",
     });
   } catch (error) {
     console.error(error);

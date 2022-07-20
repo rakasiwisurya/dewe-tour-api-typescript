@@ -19,7 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrip = exports.getTrips = exports.addTrip = void 0;
+exports.deleteTrip = exports.getTrip = exports.getTrips = exports.addTrip = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
@@ -155,3 +155,21 @@ const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getTrip = getTrip;
+const deleteTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        yield db_1.db.none(trip_1.queryDeleteTrip, [id]);
+        res.status(200).send({
+            status: "Success",
+            message: "Success delete trip",
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.deleteTrip = deleteTrip;

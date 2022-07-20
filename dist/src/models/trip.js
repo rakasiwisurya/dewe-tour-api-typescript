@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryGetDetailTrip = exports.queryGetTripsByKeyword = exports.queryGetTrips = exports.queryInsertTrip = void 0;
+exports.queryDeleteTrip = exports.queryGetDetailTrip = exports.queryGetTripsByKeyword = exports.queryGetTrips = exports.queryInsertTrip = void 0;
 exports.queryInsertTrip = `
 INSERT INTO trips
   (
@@ -53,6 +53,12 @@ exports.queryGetDetailTrip = `
 SELECT
   *
 FROM
+  trips
+WHERE
+  trip_id = $1
+`;
+exports.queryDeleteTrip = `
+DELETE FROM
   trips
 WHERE
   trip_id = $1

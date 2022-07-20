@@ -56,3 +56,10 @@ SET
 WHERE
   user_id = $1
 `;
+
+export const queryDeleteUser = `
+DELETE FROM
+  users
+WHERE
+  user_id = $1
+`;
