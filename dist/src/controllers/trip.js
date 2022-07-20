@@ -19,7 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addTrip = void 0;
+exports.getTrips = exports.addTrip = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
@@ -99,3 +99,38 @@ const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.addTrip = addTrip;
+const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { keyword } = req.query;
+    try {
+        let data;
+        if (keyword) {
+            const trips = yield db_1.db.manyOrNone(trip_1.queryGetTripsByKeyword, [`%${keyword}%`]);
+            data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
+                const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
+                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}` })));
+                return Object.assign(Object.assign({}, trip), { trip_images });
+            })));
+        }
+        else {
+            const trips = yield db_1.db.many(trip_1.queryGetTrips);
+            data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
+                const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
+                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}` })));
+                return Object.assign(Object.assign({}, trip), { trip_images });
+            })));
+        }
+        res.status(200).send({
+            status: "Success",
+            message: "Success get all trip",
+            data,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send({
+            status: "Failed",
+            message: "Internal server error",
+        });
+    }
+});
+exports.getTrips = getTrips;

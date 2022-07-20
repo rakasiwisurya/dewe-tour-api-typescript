@@ -2,8 +2,12 @@ import { Request, Response } from "express";
 import Joi from "joi";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
-import { queryInsertTrip } from "../models/trip";
-import { queryGetImageCodeByLastData, queryInsertTripImage } from "../models/tripImage";
+import { queryGetTrips, queryGetTripsByKeyword, queryInsertTrip } from "../models/trip";
+import {
+  queryGetImageByImageCode,
+  queryGetImageCodeByLastData,
+  queryInsertTripImage,
+} from "../models/tripImage";
 
 export const addTrip = async (req: Request, res: Response) => {
   const {
@@ -80,6 +84,57 @@ export const addTrip = async (req: Request, res: Response) => {
     res.status(201).send({
       status: "Success",
       message: "Success add trip",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      status: "Failed",
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getTrips = async (req: Request, res: Response) => {
+  const { keyword } = req.query;
+
+  try {
+    let data;
+    if (keyword) {
+      const trips = await db.manyOrNone(queryGetTripsByKeyword, [`%${keyword}%`]);
+
+      data = await Promise.all(
+        trips.map(async (trip) => {
+          const tripImages = await db.many(queryGetImageByImageCode, trip.trip_image_code);
+
+          const trip_images = tripImages.map((tripImage) => ({
+            ...tripImage,
+            trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}`,
+          }));
+
+          return { ...trip, trip_images };
+        })
+      );
+    } else {
+      const trips = await db.many(queryGetTrips);
+
+      data = await Promise.all(
+        trips.map(async (trip) => {
+          const tripImages = await db.many(queryGetImageByImageCode, trip.trip_image_code);
+
+          const trip_images = tripImages.map((tripImage) => ({
+            ...tripImage,
+            trip_image_url: `${process.env.BASE_URL}${tripImage.trip_image_name}`,
+          }));
+
+          return { ...trip, trip_images };
+        })
+      );
+    }
+
+    res.status(200).send({
+      status: "Success",
+      message: "Success get all trip",
+      data,
     });
   } catch (error) {
     console.error(error);

@@ -6,7 +6,7 @@ import { uploadFile, uploadFiles } from "../middlewares/fileHandler";
 import { login, register } from "../controllers/auth";
 import { getUser, updateAvatar, updateUser } from "../controllers/user";
 import { addCountry, getCountries } from "../controllers/country";
-import { addTrip } from "../controllers/trip";
+import { addTrip, getTrips } from "../controllers/trip";
 
 const router = Router();
 
@@ -21,5 +21,6 @@ router.post("/countries", auth, addCountry);
 router.get("/countries", auth, getCountries);
 
 router.post("/trips", auth, uploadFiles("trip_images", "uploads/trips"), addTrip);
+router.get("/trips", getTrips);
 
 export default router;

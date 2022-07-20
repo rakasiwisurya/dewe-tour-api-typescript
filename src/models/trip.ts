@@ -30,3 +30,21 @@ VALUES
     $12
   )
 `;
+
+export const queryGetTrips = `
+SELECT
+  *
+FROM
+  trips
+`;
+
+export const queryGetTripsByKeyword = `
+SELECT
+  *
+FROM
+  trips
+WHERE
+  title
+ILIKE
+  $1
+`;

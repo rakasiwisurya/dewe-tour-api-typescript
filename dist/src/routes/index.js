@@ -16,4 +16,5 @@ router.put("/users/image/:id", auth_1.auth, (0, fileHandler_1.uploadFile)("avata
 router.post("/countries", auth_1.auth, country_1.addCountry);
 router.get("/countries", auth_1.auth, country_1.getCountries);
 router.post("/trips", auth_1.auth, (0, fileHandler_1.uploadFiles)("trip_images", "uploads/trips"), trip_1.addTrip);
+router.get("/trips", trip_1.getTrips);
 exports.default = router;
