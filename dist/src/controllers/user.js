@@ -19,7 +19,10 @@ const user_1 = require("../models/user");
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
-        const data = yield db_1.db.one(user_1.queryGetUser, [id]);
+        let data = yield db_1.db.one(user_1.queryGetUser, [id]);
+        if (data.avatar) {
+            data = Object.assign(Object.assign({}, data), { avatar: `${process.env.BASE_URL}${data.avatar}` });
+        }
         res.status(200).send({
             status: "Success",
             message: "Sucess get detail user",

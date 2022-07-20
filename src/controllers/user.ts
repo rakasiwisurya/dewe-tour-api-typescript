@@ -7,7 +7,14 @@ export const getUser = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const data = await db.one(queryGetUser, [id]);
+    let data = await db.one(queryGetUser, [id]);
+
+    if (data.avatar) {
+      data = {
+        ...data,
+        avatar: `${process.env.BASE_URL}${data.avatar}`,
+      };
+    }
 
     res.status(200).send({
       status: "Success",
