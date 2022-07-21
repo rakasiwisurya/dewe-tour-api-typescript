@@ -77,24 +77,11 @@ SELECT
   trips.accomodation,
   trips.transportation,
   countries.country_name
-FROM
-  transactions
-LEFT JOIN
-  users
-  LEFT JOIN
-    genders
-  ON
-    users.gender_id = genders.gender_id
-ON
-  transactions.user_id = users.user_id
-LEFT JOIN
-  trips
-  LEFT JOIN
-    countries
-  ON
-    trips.country_id = countries.country_id
-ON
-  transactions.trip_id = trips.trip_id
+FROM transactions
+LEFT JOIN users ON transactions.user_id = users.user_id
+LEFT JOIN genders ON users.gender_id = genders.gender_id
+LEFT JOIN trips ON transactions.trip_id = trips.trip_id
+LEFT JOIN countries ON trips.country_id = countries.country_id
 WHERE
   transaction_id = $1
 `;
