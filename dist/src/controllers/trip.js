@@ -21,13 +21,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteTrip = exports.getTrip = exports.getTrips = exports.addTrip = void 0;
 const joi_1 = __importDefault(require("joi"));
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
 const trip_1 = require("../models/trip");
 const tripImage_1 = require("../models/tripImage");
 const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var e_1, _a;
-    const { title, country_id, accomodation, transportation, eat, day, night, price, quota, max_quota, description, } = req.body;
+    const { title, country_id, accomodation, transportation, eat, day, night, price, quota, date_trip, description, } = req.body;
     const { trip_images } = req.files;
     const schema = joi_1.default.object({
         title: joi_1.default.string().max(50).required(),
@@ -39,7 +40,7 @@ const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         night: joi_1.default.number().required(),
         price: joi_1.default.number().required(),
         quota: joi_1.default.number().required(),
-        max_quota: joi_1.default.number().required(),
+        date_trip: joi_1.default.date().required(),
         description: joi_1.default.string().required(),
     });
     const { error } = schema.validate(req.body);
@@ -81,7 +82,7 @@ const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             night,
             price,
             quota,
-            max_quota,
+            date_trip,
             description,
             incrementImageCode,
         ]);
@@ -116,7 +117,8 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
                 const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
                 const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
-                return Object.assign(Object.assign({}, trip), { trip_images });
+                const date_trip = (0, moment_timezone_1.default)(trip.date_trip).format("YYYY-MM-DD");
+                return Object.assign(Object.assign({}, trip), { trip_images, date_trip });
             })));
         }
         res.status(200).send({
@@ -139,6 +141,7 @@ const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let data = yield db_1.db.one(trip_1.queryGetDetailTrip, [id]);
         const trip_images = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [data.trip_image_code]);
+        data.date_trip = (0, moment_timezone_1.default)(data.date_trip).format("YYYY-MM-DD");
         data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${trip_image.trip_image_name}` })));
         res.status(200).send({
             status: "Success",

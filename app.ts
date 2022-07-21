@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import express, { Express, Request, Response } from "express";
 import cors from "cors";
+import moment from "moment-timezone";
+moment.tz.setDefault("Asia/Jakarta");
 
 import router from "./src/routes";
 

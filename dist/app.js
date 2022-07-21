@@ -7,6 +7,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const moment_timezone_1 = __importDefault(require("moment-timezone"));
+moment_timezone_1.default.tz.setDefault("Asia/Jakarta");
 const routes_1 = __importDefault(require("./src/routes"));
 const app = (0, express_1.default)();
 const port = process.env.PORT;

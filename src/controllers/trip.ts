@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Joi from "joi";
+import moment from "moment-timezone";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
 import {
@@ -26,7 +27,7 @@ export const addTrip = async (req: Request, res: Response) => {
     night,
     price,
     quota,
-    max_quota,
+    date_trip,
     description,
   } = req.body;
 
@@ -42,7 +43,7 @@ export const addTrip = async (req: Request, res: Response) => {
     night: Joi.number().required(),
     price: Joi.number().required(),
     quota: Joi.number().required(),
-    max_quota: Joi.number().required(),
+    date_trip: Joi.date().required(),
     description: Joi.string().required(),
   });
 
@@ -82,7 +83,7 @@ export const addTrip = async (req: Request, res: Response) => {
       night,
       price,
       quota,
-      max_quota,
+      date_trip,
       description,
       incrementImageCode,
     ]);
@@ -132,7 +133,9 @@ export const getTrips = async (req: Request, res: Response) => {
             trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
           }));
 
-          return { ...trip, trip_images };
+          const date_trip = moment(trip.date_trip).format("YYYY-MM-DD");
+
+          return { ...trip, trip_images, date_trip };
         })
       );
     }
@@ -159,6 +162,7 @@ export const getTrip = async (req: Request, res: Response) => {
 
     const trip_images = await db.many(queryGetImageByImageCode, [data.trip_image_code]);
 
+    data.date_trip = moment(data.date_trip).format("YYYY-MM-DD");
     data.trip_images = trip_images.map((trip_image) => ({
       ...trip_image,
       trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${trip_image.trip_image_name}`,
