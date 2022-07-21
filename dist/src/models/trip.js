@@ -38,12 +38,20 @@ SELECT
   *
 FROM
   trips
+LEFT JOIN
+  countries
+ON
+  trips.country_id = countries.country_id
 `;
 exports.queryGetTripsByKeyword = `
 SELECT
   *
 FROM
   trips
+LEFT JOIN
+  countries
+ON
+  trips.country_id = countries.country_id
 WHERE
   title
 ILIKE
@@ -54,6 +62,10 @@ SELECT
   *
 FROM
   trips
+LEFT JOIN
+  countries
+ON
+  trips.country_id = countries.country_id
 WHERE
   trip_id = $1
 `;
