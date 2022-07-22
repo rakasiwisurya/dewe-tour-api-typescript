@@ -7,7 +7,6 @@ import {
   queryDeleteTrip,
   queryGetDetailTrip,
   queryGetTrips,
-  queryGetTripsByKeyword,
   queryInsertTrip,
 } from "../models/trip";
 import {
@@ -15,6 +14,12 @@ import {
   queryGetImageCodeByLastData,
   queryInsertTripImage,
 } from "../models/tripImage";
+
+interface GetTripsQuery {
+  keyword?: string;
+  offset?: number;
+  limit?: number | null;
+}
 
 export const addTrip = async (req: Request, res: Response) => {
   const {
@@ -102,43 +107,44 @@ export const addTrip = async (req: Request, res: Response) => {
 };
 
 export const getTrips = async (req: Request, res: Response) => {
-  const { keyword } = req.query;
+  let { keyword, offset, limit }: GetTripsQuery = req.query;
+
+  const schema = Joi.object({
+    keyword: Joi.string().optional(),
+    offset: Joi.number().optional(),
+    limit: Joi.number().optional(),
+  });
+
+  const { error } = schema.validate(req.query);
+
+  if (error) {
+    return res.status(400).send({
+      status: "Failed",
+      message: error.details[0].message,
+    });
+  }
+
+  if (!keyword) keyword = "";
+  if (!offset) offset = 0;
+  if (!limit) limit = null;
 
   try {
-    let data;
-    if (keyword) {
-      const trips = await db.manyOrNone(queryGetTripsByKeyword, [`%${keyword}%`]);
+    const trips = await db.manyOrNone(queryGetTrips, [`%${keyword}%`, offset, limit]);
 
-      data = await Promise.all(
-        trips.map(async (trip) => {
-          const tripImages = await db.many(queryGetImageByImageCode, trip.trip_image_code);
+    const data = await Promise.all(
+      trips.map(async (trip) => {
+        const tripImages = await db.many(queryGetImageByImageCode, trip.trip_image_code);
 
-          const trip_images = tripImages.map((tripImage) => ({
-            ...tripImage,
-            trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
-          }));
+        const trip_images = tripImages.map((tripImage) => ({
+          ...tripImage,
+          trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
+        }));
 
-          return { ...trip, trip_images };
-        })
-      );
-    } else {
-      const trips = await db.manyOrNone(queryGetTrips);
+        const date_trip = moment(trip.date_trip).format("YYYY-MM-DD");
 
-      data = await Promise.all(
-        trips.map(async (trip) => {
-          const tripImages = await db.many(queryGetImageByImageCode, trip.trip_image_code);
-
-          const trip_images = tripImages.map((tripImage) => ({
-            ...tripImage,
-            trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
-          }));
-
-          const date_trip = moment(trip.date_trip).format("YYYY-MM-DD");
-
-          return { ...trip, trip_images, date_trip };
-        })
-      );
-    }
+        return { ...trip, trip_images, date_trip };
+      })
+    );
 
     res.status(200).send({
       status: "Success",

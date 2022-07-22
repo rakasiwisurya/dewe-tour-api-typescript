@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryDeleteTrip = exports.queryUpdateQuotaTrip = exports.queryGetDetailTrip = exports.queryGetTripsByKeyword = exports.queryGetTrips = exports.queryInsertTrip = void 0;
+exports.queryDeleteTrip = exports.queryUpdateQuotaTrip = exports.queryGetDetailTrip = exports.queryGetTrips = exports.queryInsertTrip = void 0;
 exports.queryInsertTrip = `
 INSERT INTO trips
   (
@@ -44,20 +44,16 @@ LEFT JOIN
   countries
 ON
   trips.country_id = countries.country_id
-`;
-exports.queryGetTripsByKeyword = `
-SELECT
-  *
-FROM
-  trips
-LEFT JOIN
-  countries
-ON
-  trips.country_id = countries.country_id
 WHERE
   title
 ILIKE
   $1
+ORDER BY
+  trip_id
+OFFSET
+  $2
+LIMIT
+  $3
 `;
 exports.queryGetDetailTrip = `
 SELECT

@@ -101,26 +101,33 @@ const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.addTrip = addTrip;
 const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { keyword } = req.query;
+    let { keyword, offset, limit } = req.query;
+    const schema = joi_1.default.object({
+        keyword: joi_1.default.string().optional(),
+        offset: joi_1.default.number().optional(),
+        limit: joi_1.default.number().optional(),
+    });
+    const { error } = schema.validate(req.query);
+    if (error) {
+        return res.status(400).send({
+            status: "Failed",
+            message: error.details[0].message,
+        });
+    }
+    if (!keyword)
+        keyword = "";
+    if (!offset)
+        offset = 0;
+    if (!limit)
+        limit = null;
     try {
-        let data;
-        if (keyword) {
-            const trips = yield db_1.db.manyOrNone(trip_1.queryGetTripsByKeyword, [`%${keyword}%`]);
-            data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
-                const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
-                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
-                return Object.assign(Object.assign({}, trip), { trip_images });
-            })));
-        }
-        else {
-            const trips = yield db_1.db.manyOrNone(trip_1.queryGetTrips);
-            data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
-                const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
-                const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
-                const date_trip = (0, moment_timezone_1.default)(trip.date_trip).format("YYYY-MM-DD");
-                return Object.assign(Object.assign({}, trip), { trip_images, date_trip });
-            })));
-        }
+        const trips = yield db_1.db.manyOrNone(trip_1.queryGetTrips, [`%${keyword}%`, offset, limit]);
+        const data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
+            const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
+            const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
+            const date_trip = (0, moment_timezone_1.default)(trip.date_trip).format("YYYY-MM-DD");
+            return Object.assign(Object.assign({}, trip), { trip_images, date_trip });
+        })));
         res.status(200).send({
             status: "Success",
             message: "Success get all trip",

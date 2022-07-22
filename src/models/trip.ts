@@ -42,21 +42,16 @@ LEFT JOIN
   countries
 ON
   trips.country_id = countries.country_id
-`;
-
-export const queryGetTripsByKeyword = `
-SELECT
-  *
-FROM
-  trips
-LEFT JOIN
-  countries
-ON
-  trips.country_id = countries.country_id
 WHERE
   title
 ILIKE
   $1
+ORDER BY
+  trip_id
+OFFSET
+  $2
+LIMIT
+  $3
 `;
 
 export const queryGetDetailTrip = `
