@@ -43,9 +43,9 @@ LEFT JOIN
 ON
   trips.country_id = countries.country_id
 WHERE
-  title
-ILIKE
-  $1
+  trips.title ILIKE $1
+OR
+  countries.country_name ILIKE $1
 ORDER BY
   trip_id
 OFFSET

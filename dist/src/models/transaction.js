@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryDeleteTransaction = exports.queryRejectTransaction = exports.queryApproveTransaction = exports.queryUpdateProofPayment = exports.queryIncomeTrip = exports.queryGetTransaction = exports.queryGetTransactions = exports.queryInsertTransaction = exports.queryGetTransactionCodeByLastData = void 0;
+exports.queryDeleteTransaction = exports.queryRejectTransaction = exports.queryApproveTransaction = exports.queryUpdateProofPayment = exports.queryIncomeTrip = exports.queryGetTransaction = exports.queryCountTransactions = exports.queryGetTransactions = exports.queryInsertTransaction = exports.queryGetTransactionCodeByLastData = void 0;
 exports.queryGetTransactionCodeByLastData = `
 SELECT
   transaction_code
@@ -45,14 +45,35 @@ SELECT
   trips.title
 FROM
   transactions
-LEFT JOIN
-  users
-ON
-  transactions.user_id = users.user_id
-LEFT JOIN
-  trips
-ON
-  transactions.trip_id = trips.trip_id
+LEFT JOIN users ON transactions.user_id = users.user_id
+LEFT JOIN trips ON transactions.trip_id = trips.trip_id
+WHERE
+  users.fullname ILIKE $1
+OR
+  trips.title ILIKE $1
+OR
+  transactions.proof_payment ILIKE $1
+OR
+  transactions.transaction_status_name ILIKE $1
+ORDER BY
+  transactions.transaction_id
+OFFSET $2
+LIMIT $3
+`;
+exports.queryCountTransactions = `
+SELECT COUNT (*) :: integer AS count
+FROM
+  transactions
+LEFT JOIN users ON transactions.user_id = users.user_id
+LEFT JOIN trips ON transactions.trip_id = trips.trip_id
+WHERE
+  users.fullname ILIKE $1
+OR
+  trips.title ILIKE $1
+OR
+  transactions.proof_payment ILIKE $1
+OR
+  transactions.transaction_status_name ILIKE $1
 `;
 exports.queryGetTransaction = `
 SELECT

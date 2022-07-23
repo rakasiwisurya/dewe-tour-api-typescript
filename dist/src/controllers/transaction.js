@@ -93,13 +93,51 @@ const uploadProofPayment = (req, res) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.uploadProofPayment = uploadProofPayment;
 const getTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let { keyword, current_page, limit } = req.query;
+    const schema = joi_1.default.object({
+        keyword: joi_1.default.string().optional(),
+        current_page: joi_1.default.number().optional(),
+        limit: joi_1.default.number().optional(),
+    });
+    const { error } = schema.validate(req.query);
+    if (error) {
+        return res.status(400).send({
+            status: "Failed",
+            message: error.details[0].message,
+        });
+    }
+    if ((!current_page && limit) || (current_page && !limit)) {
+        return res.status(400).send({
+            status: "Failed",
+            message: "Can't set current_page or limit only, set both of current_page and limit instead",
+        });
+    }
+    const offset = current_page && limit ? (current_page - 1) * limit : 0;
+    if (!keyword)
+        keyword = "";
+    if (!limit)
+        limit = null;
     try {
-        const transactions = yield db_1.db.manyOrNone(transaction_1.queryGetTransactions);
+        const totalRecord = yield db_1.db.oneOrNone(transaction_1.queryCountTransactions, [`%${keyword}%`]);
+        const transactions = yield db_1.db.manyOrNone(transaction_1.queryGetTransactions, [`%${keyword}%`, offset, limit]);
         const data = transactions.map((transaction) => (Object.assign(Object.assign({}, transaction), { proof_payment_url: `${process.env.BASE_URL_UPLOAD}/proofs/${transaction.proof_payment}` })));
+        if (!current_page)
+            current_page = 1;
+        const newLimit = limit ? limit : totalRecord.count;
+        const startIndex = (current_page - 1) * newLimit;
+        const endIndex = current_page * newLimit;
+        const hasNext = endIndex < totalRecord.count ? true : false;
+        const hasPrev = startIndex > 0 ? true : false;
         res.status(200).send({
             status: "Success",
             message: "Success get all transaction",
-            data,
+            data: {
+                current_page: +current_page,
+                total_record: totalRecord.count,
+                has_next: hasNext,
+                has_prev: hasPrev,
+                records: data,
+            },
         });
     }
     catch (error) {

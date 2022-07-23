@@ -5,6 +5,7 @@ import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
 import {
   queryApproveTransaction,
+  queryCountTransactions,
   queryDeleteTransaction,
   queryGetTransaction,
   queryGetTransactionCodeByLastData,
@@ -15,6 +16,12 @@ import {
   queryUpdateProofPayment,
 } from "../models/transaction";
 import { queryGetDetailTrip, queryUpdateQuotaTrip } from "../models/trip";
+
+interface QueryGetTransactions {
+  keyword?: string;
+  current_page?: number;
+  limit?: number | null;
+}
 
 export const addTransaction = async (req: Request, res: Response) => {
   const { user_id, trip_id, qty } = req.body;
@@ -103,18 +110,61 @@ export const uploadProofPayment = async (req: Request, res: Response) => {
 };
 
 export const getTransactions = async (req: Request, res: Response) => {
+  let { keyword, current_page, limit }: QueryGetTransactions = req.query;
+
+  const schema = Joi.object({
+    keyword: Joi.string().optional(),
+    current_page: Joi.number().optional(),
+    limit: Joi.number().optional(),
+  });
+
+  const { error } = schema.validate(req.query);
+
+  if (error) {
+    return res.status(400).send({
+      status: "Failed",
+      message: error.details[0].message,
+    });
+  }
+
+  if ((!current_page && limit) || (current_page && !limit)) {
+    return res.status(400).send({
+      status: "Failed",
+      message: "Can't set current_page or limit only, set both of current_page and limit instead",
+    });
+  }
+
+  const offset = current_page && limit ? (current_page - 1) * limit : 0;
+  if (!keyword) keyword = "";
+  if (!limit) limit = null;
+
   try {
-    const transactions = await db.manyOrNone(queryGetTransactions);
+    const totalRecord = await db.oneOrNone(queryCountTransactions, [`%${keyword}%`]);
+
+    const transactions = await db.manyOrNone(queryGetTransactions, [`%${keyword}%`, offset, limit]);
 
     const data = transactions.map((transaction) => ({
       ...transaction,
       proof_payment_url: `${process.env.BASE_URL_UPLOAD}/proofs/${transaction.proof_payment}`,
     }));
 
+    if (!current_page) current_page = 1;
+    const newLimit = limit ? limit : totalRecord.count;
+    const startIndex = (current_page - 1) * newLimit;
+    const endIndex = current_page * newLimit;
+    const hasNext = endIndex < totalRecord.count ? true : false;
+    const hasPrev = startIndex > 0 ? true : false;
+
     res.status(200).send({
       status: "Success",
       message: "Success get all transaction",
-      data,
+      data: {
+        current_page: +current_page,
+        total_record: totalRecord.count,
+        has_next: hasNext,
+        has_prev: hasPrev,
+        records: data,
+      },
     });
   } catch (error) {
     console.error(error);
