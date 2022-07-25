@@ -15,17 +15,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.updateAvatar = exports.updateUser = exports.getUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
+const clodinary_1 = require("../libraries/clodinary");
 const user_1 = require("../models/user");
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
         let data = yield db_1.db.one(user_1.queryGetUser, [id]);
-        if (data.avatar) {
-            data = Object.assign(Object.assign({}, data), { avatar: `${process.env.BASE_URL_UPLOAD}/avatars/${data.avatar}` });
-        }
-        else {
-            data = Object.assign(Object.assign({}, data), { avatar: `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg` });
-        }
+        data = Object.assign(Object.assign({}, data), { avatar: data.avatar
+                ? clodinary_1.cloudinary.url(data.avatar)
+                : `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg` });
         res.status(200).send({
             status: "Success",
             message: "Sucess get detail user",
@@ -76,10 +74,20 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.updateUser = updateUser;
 const updateAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     const { id } = req.params;
+    if (!req.file) {
+        return res.status(400).send({
+            status: "Failed",
+            message: "No upload file",
+        });
+    }
+    const cloudinary_upload = yield clodinary_1.cloudinary.uploader.upload(req.file.path, {
+        folder: "/dewe_tour/avatars",
+        use_filename: true,
+        unique_filename: false,
+    });
     try {
-        yield db_1.db.none(user_1.queryUpdateAvatar, [id, (_a = req.file) === null || _a === void 0 ? void 0 : _a.filename]);
+        yield db_1.db.none(user_1.queryUpdateAvatar, [id, cloudinary_upload.public_id]);
         res.status(200).send({
             status: "Success",
             message: "Success update avatar",

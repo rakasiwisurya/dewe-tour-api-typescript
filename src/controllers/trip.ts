@@ -1,8 +1,10 @@
+import { ResponseCallback } from "cloudinary";
 import { Request, Response } from "express";
 import Joi from "joi";
 import moment from "moment-timezone";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
+import { cloudinary } from "../libraries/clodinary";
 import {
   queryDeleteTrip,
   queryGetDetailTrip,
@@ -37,6 +39,13 @@ export const addTrip = async (req: Request, res: Response) => {
   } = req.body;
 
   const { trip_images } = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  if (!trip_images) {
+    return res.status(400).send({
+      status: "Failed",
+      message: "No upload files",
+    });
+  }
 
   const schema = Joi.object({
     title: Joi.string().max(50).required(),
@@ -75,7 +84,12 @@ export const addTrip = async (req: Request, res: Response) => {
     }
 
     for await (const trip_image of trip_images) {
-      await db.none(queryInsertTripImage, [incrementImageCode, trip_image.filename]);
+      const cloudinary_upload = await cloudinary.uploader.upload(trip_image.path, {
+        folder: "/dewe_tour/trips",
+        use_filename: true,
+        unique_filename: false,
+      });
+      await db.none(queryInsertTripImage, [incrementImageCode, cloudinary_upload.public_id]);
     }
 
     await db.none(queryInsertTrip, [
@@ -137,7 +151,7 @@ export const getTrips = async (req: Request, res: Response) => {
 
         const trip_images = tripImages.map((tripImage) => ({
           ...tripImage,
-          trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}`,
+          trip_image_url: cloudinary.url(tripImage.trip_image_name),
         }));
 
         const date_trip = moment(trip.date_trip).format("YYYY-MM-DD");
@@ -164,14 +178,22 @@ export const getTrip = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    let data = await db.one(queryGetDetailTrip, [id]);
+    let data = await db.oneOrNone(queryGetDetailTrip, [id]);
+
+    if (!data) {
+      return res.status(200).send({
+        status: "Success",
+        message: "Success get detail trip",
+        data,
+      });
+    }
 
     const trip_images = await db.many(queryGetImageByImageCode, [data.trip_image_code]);
 
     data.date_trip = moment(data.date_trip).format("YYYY-MM-DD");
     data.trip_images = trip_images.map((trip_image) => ({
       ...trip_image,
-      trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${trip_image.trip_image_name}`,
+      trip_image_url: cloudinary.url(trip_image.trip_image_name),
     }));
 
     res.status(200).send({
@@ -192,6 +214,21 @@ export const deleteTrip = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
+    const trip = await db.oneOrNone(queryGetDetailTrip, [id]);
+
+    if (!trip) {
+      return res.status(400).send({
+        status: "Failed",
+        message: "Data doesn't exist",
+      });
+    }
+
+    const tripImages = await db.many(queryGetImageByImageCode, [trip.trip_image_code]);
+
+    for await (const tripImage of tripImages) {
+      await cloudinary.uploader.destroy(tripImage.trip_image_name);
+    }
+
     await db.none(queryDeleteTrip, [id]);
 
     res.status(200).send({

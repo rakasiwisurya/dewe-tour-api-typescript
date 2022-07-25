@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Joi from "joi";
 import { db } from "../db";
+import { cloudinary } from "../libraries/clodinary";
 import { queryDeleteUser, queryGetUser, queryUpdateAvatar, queryUpdateUser } from "../models/user";
 
 export const getUser = async (req: Request, res: Response) => {
@@ -9,17 +10,12 @@ export const getUser = async (req: Request, res: Response) => {
   try {
     let data = await db.one(queryGetUser, [id]);
 
-    if (data.avatar) {
-      data = {
-        ...data,
-        avatar: `${process.env.BASE_URL_UPLOAD}/avatars/${data.avatar}`,
-      };
-    } else {
-      data = {
-        ...data,
-        avatar: `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg`,
-      };
-    }
+    data = {
+      ...data,
+      avatar: data.avatar
+        ? cloudinary.url(data.avatar)
+        : `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg`,
+    };
 
     res.status(200).send({
       status: "Success",
@@ -77,8 +73,21 @@ export const updateUser = async (req: Request, res: Response) => {
 export const updateAvatar = async (req: Request, res: Response) => {
   const { id } = req.params;
 
+  if (!req.file) {
+    return res.status(400).send({
+      status: "Failed",
+      message: "No upload file",
+    });
+  }
+
+  const cloudinary_upload = await cloudinary.uploader.upload(req.file.path, {
+    folder: "/dewe_tour/avatars",
+    use_filename: true,
+    unique_filename: false,
+  });
+
   try {
-    await db.none(queryUpdateAvatar, [id, req.file?.filename]);
+    await db.none(queryUpdateAvatar, [id, cloudinary_upload.public_id]);
 
     res.status(200).send({
       status: "Success",

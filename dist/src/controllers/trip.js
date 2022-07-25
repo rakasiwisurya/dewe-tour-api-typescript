@@ -24,12 +24,19 @@ const joi_1 = __importDefault(require("joi"));
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
+const clodinary_1 = require("../libraries/clodinary");
 const trip_1 = require("../models/trip");
 const tripImage_1 = require("../models/tripImage");
 const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var e_1, _a;
     const { title, country_id, accomodation, transportation, eat, day, night, price, quota, date_trip, description, } = req.body;
     const { trip_images } = req.files;
+    if (!trip_images) {
+        return res.status(400).send({
+            status: "Failed",
+            message: "No upload files",
+        });
+    }
     const schema = joi_1.default.object({
         title: joi_1.default.string().max(50).required(),
         country_id: joi_1.default.number().required(),
@@ -62,7 +69,12 @@ const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             for (var trip_images_1 = __asyncValues(trip_images), trip_images_1_1; trip_images_1_1 = yield trip_images_1.next(), !trip_images_1_1.done;) {
                 const trip_image = trip_images_1_1.value;
-                yield db_1.db.none(tripImage_1.queryInsertTripImage, [incrementImageCode, trip_image.filename]);
+                const cloudinary_upload = yield clodinary_1.cloudinary.uploader.upload(trip_image.path, {
+                    folder: "/dewe_tour/trips",
+                    use_filename: true,
+                    unique_filename: false,
+                });
+                yield db_1.db.none(tripImage_1.queryInsertTripImage, [incrementImageCode, cloudinary_upload.public_id]);
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -124,7 +136,7 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const trips = yield db_1.db.manyOrNone(trip_1.queryGetTrips, [`%${keyword}%`, offset, limit]);
         const data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
             const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
-            const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${tripImage.trip_image_name}` })));
+            const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: clodinary_1.cloudinary.url(tripImage.trip_image_name) })));
             const date_trip = (0, moment_timezone_1.default)(trip.date_trip).format("YYYY-MM-DD");
             return Object.assign(Object.assign({}, trip), { trip_images, date_trip });
         })));
@@ -146,10 +158,17 @@ exports.getTrips = getTrips;
 const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
-        let data = yield db_1.db.one(trip_1.queryGetDetailTrip, [id]);
+        let data = yield db_1.db.oneOrNone(trip_1.queryGetDetailTrip, [id]);
+        if (!data) {
+            return res.status(200).send({
+                status: "Success",
+                message: "Success get detail trip",
+                data,
+            });
+        }
         const trip_images = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [data.trip_image_code]);
         data.date_trip = (0, moment_timezone_1.default)(data.date_trip).format("YYYY-MM-DD");
-        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: `${process.env.BASE_URL_UPLOAD}/trips/${trip_image.trip_image_name}` })));
+        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: clodinary_1.cloudinary.url(trip_image.trip_image_name) })));
         res.status(200).send({
             status: "Success",
             message: "Success get detail trip",
@@ -166,8 +185,30 @@ const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.getTrip = getTrip;
 const deleteTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var e_2, _b;
     const { id } = req.params;
     try {
+        const trip = yield db_1.db.oneOrNone(trip_1.queryGetDetailTrip, [id]);
+        if (!trip) {
+            return res.status(400).send({
+                status: "Failed",
+                message: "Data doesn't exist",
+            });
+        }
+        const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [trip.trip_image_code]);
+        try {
+            for (var tripImages_1 = __asyncValues(tripImages), tripImages_1_1; tripImages_1_1 = yield tripImages_1.next(), !tripImages_1_1.done;) {
+                const tripImage = tripImages_1_1.value;
+                yield clodinary_1.cloudinary.uploader.destroy(tripImage.trip_image_name);
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (tripImages_1_1 && !tripImages_1_1.done && (_b = tripImages_1.return)) yield _b.call(tripImages_1);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
         yield db_1.db.none(trip_1.queryDeleteTrip, [id]);
         res.status(200).send({
             status: "Success",

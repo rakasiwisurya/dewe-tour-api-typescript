@@ -3,6 +3,7 @@
 !/uploads/avatars/no-photo.jpg
 !/uploads/avatars/.gitkeep
 /uploads/proofs/*
+!/uploads/proofs/no-image.png
 !/uploads/proofs/.gitkeep
 /uploads/trips/*
 !/uploads/trips/.gitkeep

@@ -115,6 +115,7 @@ SELECT
   trips.title,
   trips.quota,
   trips.max_quota,
+  trips.trip_image_code,
   countries.country_name
 FROM transactions
 LEFT JOIN trips ON transactions.trip_id = trips.trip_id
@@ -124,6 +125,7 @@ GROUP BY
   trips.title,
   trips.quota,
   trips.max_quota,
+  trips.trip_image_code,
   countries.country_name
 `;
 

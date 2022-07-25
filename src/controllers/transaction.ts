@@ -3,6 +3,7 @@ import Joi from "joi";
 import moment from "moment-timezone";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
+import { cloudinary } from "../libraries/clodinary";
 import {
   queryApproveTransaction,
   queryCountTransactions,
@@ -16,6 +17,7 @@ import {
   queryUpdateProofPayment,
 } from "../models/transaction";
 import { queryGetDetailTrip, queryUpdateQuotaTrip } from "../models/trip";
+import { queryGetImageByImageCode } from "../models/tripImage";
 
 interface QueryGetTransactions {
   keyword?: string;
@@ -87,13 +89,26 @@ export const uploadProofPayment = async (req: Request, res: Response) => {
 
   const proofPaymentDate = moment(new Date()).format();
 
+  if (!req.file) {
+    return res.status(400).send({
+      status: "Failed",
+      message: "No upload file",
+    });
+  }
+
   try {
+    const cloudinary_upload = await cloudinary.uploader.upload(req.file.path, {
+      folder: "/dewe_tour/proofs",
+      use_filename: true,
+      unique_filename: false,
+    });
+
     await db.none(queryUpdateProofPayment, [
       id,
       "WAITING_APPROVE",
       "Waiting Approve",
       proofPaymentDate,
-      req.file?.filename,
+      cloudinary_upload.public_id,
     ]);
 
     res.status(200).send({
@@ -145,7 +160,9 @@ export const getTransactions = async (req: Request, res: Response) => {
 
     const data = transactions.map((transaction) => ({
       ...transaction,
-      proof_payment_url: `${process.env.BASE_URL_UPLOAD}/proofs/${transaction.proof_payment}`,
+      proof_payment_url: transaction.proof_payment
+        ? cloudinary.url(transaction.proof_payment)
+        : `${process.env.BASE_URL_UPLOAD}/proofs/no-image.png`,
     }));
 
     if (!current_page) current_page = 1;
@@ -181,10 +198,20 @@ export const getTransaction = async (req: Request, res: Response) => {
   try {
     const transaction = await db.oneOrNone(queryGetTransaction, [id]);
 
+    if (!transaction) {
+      return res.status(200).send({
+        status: "Success",
+        message: "Success get detail transaction",
+        data: transaction,
+      });
+    }
+
     const data = {
       ...transaction,
       date_trip: moment(transaction.date_trip).format("YYYY-MM-DD"),
-      proof_payment_url: `${process.env.BASE_URL_UPLOAD}/proofs/${transaction.proof_payment}`,
+      proof_payment_url: transaction.proof_payment
+        ? cloudinary.url(transaction.proof_payment)
+        : `${process.env.BASE_URL_UPLOAD}/proofs/no-image.png`,
     };
 
     res.status(200).send({
@@ -203,7 +230,27 @@ export const getTransaction = async (req: Request, res: Response) => {
 
 export const getIncomeTransactions = async (req: Request, res: Response) => {
   try {
-    const data = await db.manyOrNone(queryIncomeTrip);
+    const incomeTrips = await db.manyOrNone(queryIncomeTrip);
+
+    if (!incomeTrips.length) {
+      return res.status(200).send({
+        status: "Success",
+        message: "Success get income transaction",
+        data: incomeTrips,
+      });
+    }
+
+    const data = await Promise.all(
+      incomeTrips.map(async (incomeTrip) => {
+        const tripImages = await db.many(queryGetImageByImageCode, [incomeTrip.trip_image_code]);
+
+        return {
+          ...incomeTrip,
+          trip_image_url: cloudinary.url(tripImages[0].trip_image_name),
+        };
+      })
+    );
+
     res.status(200).send({
       status: "Success",
       message: "Success get income transaction",
@@ -263,6 +310,17 @@ export const rejectTransaction = async (req: Request, res: Response) => {
 export const deleteTransaction = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
+    const transaction = await db.oneOrNone(queryGetTransaction, [id]);
+
+    if (!transaction) {
+      return res.status(200).send({
+        status: "Failed",
+        message: "Data doesn't exist",
+      });
+    }
+
+    await cloudinary.uploader.destroy(transaction.proof_payment);
+
     await db.none(queryDeleteTransaction, [id]);
 
     res.status(200).send({

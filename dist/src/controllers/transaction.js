@@ -17,8 +17,10 @@ const joi_1 = __importDefault(require("joi"));
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
+const clodinary_1 = require("../libraries/clodinary");
 const transaction_1 = require("../models/transaction");
 const trip_1 = require("../models/trip");
+const tripImage_1 = require("../models/tripImage");
 const addTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user_id, trip_id, qty } = req.body;
     const schema = joi_1.default.object({
@@ -67,16 +69,26 @@ const addTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.addTransaction = addTransaction;
 const uploadProofPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     const { id } = req.params;
     const proofPaymentDate = (0, moment_timezone_1.default)(new Date()).format();
+    if (!req.file) {
+        return res.status(400).send({
+            status: "Failed",
+            message: "No upload file",
+        });
+    }
     try {
+        const cloudinary_upload = yield clodinary_1.cloudinary.uploader.upload(req.file.path, {
+            folder: "/dewe_tour/proofs",
+            use_filename: true,
+            unique_filename: false,
+        });
         yield db_1.db.none(transaction_1.queryUpdateProofPayment, [
             id,
             "WAITING_APPROVE",
             "Waiting Approve",
             proofPaymentDate,
-            (_a = req.file) === null || _a === void 0 ? void 0 : _a.filename,
+            cloudinary_upload.public_id,
         ]);
         res.status(200).send({
             status: "Success",
@@ -120,7 +132,9 @@ const getTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const totalRecord = yield db_1.db.oneOrNone(transaction_1.queryCountTransactions, [`%${keyword}%`]);
         const transactions = yield db_1.db.manyOrNone(transaction_1.queryGetTransactions, [`%${keyword}%`, offset, limit]);
-        const data = transactions.map((transaction) => (Object.assign(Object.assign({}, transaction), { proof_payment_url: `${process.env.BASE_URL_UPLOAD}/proofs/${transaction.proof_payment}` })));
+        const data = transactions.map((transaction) => (Object.assign(Object.assign({}, transaction), { proof_payment_url: transaction.proof_payment
+                ? clodinary_1.cloudinary.url(transaction.proof_payment)
+                : `${process.env.BASE_URL_UPLOAD}/proofs/no-image.png` })));
         if (!current_page)
             current_page = 1;
         const newLimit = limit ? limit : totalRecord.count;
@@ -153,7 +167,16 @@ const getTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { id } = req.params;
     try {
         const transaction = yield db_1.db.oneOrNone(transaction_1.queryGetTransaction, [id]);
-        const data = Object.assign(Object.assign({}, transaction), { date_trip: (0, moment_timezone_1.default)(transaction.date_trip).format("YYYY-MM-DD"), proof_payment_url: `${process.env.BASE_URL_UPLOAD}/proofs/${transaction.proof_payment}` });
+        if (!transaction) {
+            return res.status(200).send({
+                status: "Success",
+                message: "Success get detail transaction",
+                data: transaction,
+            });
+        }
+        const data = Object.assign(Object.assign({}, transaction), { date_trip: (0, moment_timezone_1.default)(transaction.date_trip).format("YYYY-MM-DD"), proof_payment_url: transaction.proof_payment
+                ? clodinary_1.cloudinary.url(transaction.proof_payment)
+                : `${process.env.BASE_URL_UPLOAD}/proofs/no-image.png` });
         res.status(200).send({
             status: "Success",
             message: "Success get detail transaction",
@@ -171,7 +194,18 @@ const getTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getTransaction = getTransaction;
 const getIncomeTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const data = yield db_1.db.manyOrNone(transaction_1.queryIncomeTrip);
+        const incomeTrips = yield db_1.db.manyOrNone(transaction_1.queryIncomeTrip);
+        if (!incomeTrips.length) {
+            return res.status(200).send({
+                status: "Success",
+                message: "Success get income transaction",
+                data: incomeTrips,
+            });
+        }
+        const data = yield Promise.all(incomeTrips.map((incomeTrip) => __awaiter(void 0, void 0, void 0, function* () {
+            const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [incomeTrip.trip_image_code]);
+            return Object.assign(Object.assign({}, incomeTrip), { trip_image_url: clodinary_1.cloudinary.url(tripImages[0].trip_image_name) });
+        })));
         res.status(200).send({
             status: "Success",
             message: "Success get income transaction",
@@ -228,6 +262,14 @@ exports.rejectTransaction = rejectTransaction;
 const deleteTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
+        const transaction = yield db_1.db.oneOrNone(transaction_1.queryGetTransaction, [id]);
+        if (!transaction) {
+            return res.status(200).send({
+                status: "Failed",
+                message: "Data doesn't exist",
+            });
+        }
+        yield clodinary_1.cloudinary.uploader.destroy(transaction.proof_payment);
         yield db_1.db.none(transaction_1.queryDeleteTransaction, [id]);
         res.status(200).send({
             status: "Success",
