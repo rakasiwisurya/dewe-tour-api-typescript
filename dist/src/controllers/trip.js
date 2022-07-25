@@ -24,7 +24,7 @@ const joi_1 = __importDefault(require("joi"));
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
-const clodinary_1 = require("../libraries/clodinary");
+const cloudinary_1 = require("../libraries/cloudinary");
 const trip_1 = require("../models/trip");
 const tripImage_1 = require("../models/tripImage");
 const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -69,7 +69,7 @@ const addTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             for (var trip_images_1 = __asyncValues(trip_images), trip_images_1_1; trip_images_1_1 = yield trip_images_1.next(), !trip_images_1_1.done;) {
                 const trip_image = trip_images_1_1.value;
-                const cloudinary_upload = yield clodinary_1.cloudinary.uploader.upload(trip_image.path, {
+                const cloudinary_upload = yield cloudinary_1.cloudinary.uploader.upload(trip_image.path, {
                     folder: "/dewe_tour/trips",
                     use_filename: true,
                     unique_filename: false,
@@ -136,7 +136,7 @@ const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const trips = yield db_1.db.manyOrNone(trip_1.queryGetTrips, [`%${keyword}%`, offset, limit]);
         const data = yield Promise.all(trips.map((trip) => __awaiter(void 0, void 0, void 0, function* () {
             const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, trip.trip_image_code);
-            const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: clodinary_1.cloudinary.url(tripImage.trip_image_name) })));
+            const trip_images = tripImages.map((tripImage) => (Object.assign(Object.assign({}, tripImage), { trip_image_url: cloudinary_1.cloudinary.url(tripImage.trip_image_name) })));
             const date_trip = (0, moment_timezone_1.default)(trip.date_trip).format("YYYY-MM-DD");
             return Object.assign(Object.assign({}, trip), { trip_images, date_trip });
         })));
@@ -168,7 +168,7 @@ const getTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const trip_images = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [data.trip_image_code]);
         data.date_trip = (0, moment_timezone_1.default)(data.date_trip).format("YYYY-MM-DD");
-        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: clodinary_1.cloudinary.url(trip_image.trip_image_name) })));
+        data.trip_images = trip_images.map((trip_image) => (Object.assign(Object.assign({}, trip_image), { trip_image_url: cloudinary_1.cloudinary.url(trip_image.trip_image_name) })));
         res.status(200).send({
             status: "Success",
             message: "Success get detail trip",
@@ -199,7 +199,7 @@ const deleteTrip = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         try {
             for (var tripImages_1 = __asyncValues(tripImages), tripImages_1_1; tripImages_1_1 = yield tripImages_1.next(), !tripImages_1_1.done;) {
                 const tripImage = tripImages_1_1.value;
-                yield clodinary_1.cloudinary.uploader.destroy(tripImage.trip_image_name);
+                yield cloudinary_1.cloudinary.uploader.destroy(tripImage.trip_image_name);
             }
         }
         catch (e_2_1) { e_2 = { error: e_2_1 }; }

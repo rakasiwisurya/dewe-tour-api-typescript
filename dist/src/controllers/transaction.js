@@ -17,7 +17,7 @@ const joi_1 = __importDefault(require("joi"));
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
 const db_1 = require("../db");
 const buildIncrementCode_1 = require("../helpers/buildIncrementCode");
-const clodinary_1 = require("../libraries/clodinary");
+const cloudinary_1 = require("../libraries/cloudinary");
 const transaction_1 = require("../models/transaction");
 const trip_1 = require("../models/trip");
 const tripImage_1 = require("../models/tripImage");
@@ -78,7 +78,7 @@ const uploadProofPayment = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     try {
-        const cloudinary_upload = yield clodinary_1.cloudinary.uploader.upload(req.file.path, {
+        const cloudinary_upload = yield cloudinary_1.cloudinary.uploader.upload(req.file.path, {
             folder: "/dewe_tour/proofs",
             use_filename: true,
             unique_filename: false,
@@ -133,7 +133,7 @@ const getTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function
         const totalRecord = yield db_1.db.oneOrNone(transaction_1.queryCountTransactions, [`%${keyword}%`]);
         const transactions = yield db_1.db.manyOrNone(transaction_1.queryGetTransactions, [`%${keyword}%`, offset, limit]);
         const data = transactions.map((transaction) => (Object.assign(Object.assign({}, transaction), { proof_payment_url: transaction.proof_payment
-                ? clodinary_1.cloudinary.url(transaction.proof_payment)
+                ? cloudinary_1.cloudinary.url(transaction.proof_payment)
                 : `${process.env.BASE_URL_UPLOAD}/proofs/no-image.png` })));
         if (!current_page)
             current_page = 1;
@@ -175,7 +175,7 @@ const getTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function*
             });
         }
         const data = Object.assign(Object.assign({}, transaction), { date_trip: (0, moment_timezone_1.default)(transaction.date_trip).format("YYYY-MM-DD"), proof_payment_url: transaction.proof_payment
-                ? clodinary_1.cloudinary.url(transaction.proof_payment)
+                ? cloudinary_1.cloudinary.url(transaction.proof_payment)
                 : `${process.env.BASE_URL_UPLOAD}/proofs/no-image.png` });
         res.status(200).send({
             status: "Success",
@@ -193,8 +193,22 @@ const getTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.getTransaction = getTransaction;
 const getIncomeTransactions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { offset, limit } = req.query;
+    const schema = joi_1.default.object({
+        offset: joi_1.default.number().optional(),
+        limit: joi_1.default.number().optional(),
+    });
+    const { error } = schema.validate(req.query);
+    if (error) {
+        return res.status(400).send({
+            status: "Failed",
+            message: error.details[0].message,
+        });
+    }
+    const newoffset = offset ? offset : 0;
+    const newLimit = limit ? limit : null;
     try {
-        const incomeTrips = yield db_1.db.manyOrNone(transaction_1.queryIncomeTrip);
+        const incomeTrips = yield db_1.db.manyOrNone(transaction_1.queryIncomeTrip, [newoffset, newLimit]);
         if (!incomeTrips.length) {
             return res.status(200).send({
                 status: "Success",
@@ -204,7 +218,7 @@ const getIncomeTransactions = (req, res) => __awaiter(void 0, void 0, void 0, fu
         }
         const data = yield Promise.all(incomeTrips.map((incomeTrip) => __awaiter(void 0, void 0, void 0, function* () {
             const tripImages = yield db_1.db.many(tripImage_1.queryGetImageByImageCode, [incomeTrip.trip_image_code]);
-            return Object.assign(Object.assign({}, incomeTrip), { trip_image_url: clodinary_1.cloudinary.url(tripImages[0].trip_image_name) });
+            return Object.assign(Object.assign({}, incomeTrip), { trip_image_url: cloudinary_1.cloudinary.url(tripImages[0].trip_image_name) });
         })));
         res.status(200).send({
             status: "Success",
@@ -269,7 +283,7 @@ const deleteTransaction = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 message: "Data doesn't exist",
             });
         }
-        yield clodinary_1.cloudinary.uploader.destroy(transaction.proof_payment);
+        yield cloudinary_1.cloudinary.uploader.destroy(transaction.proof_payment);
         yield db_1.db.none(transaction_1.queryDeleteTransaction, [id]);
         res.status(200).send({
             status: "Success",

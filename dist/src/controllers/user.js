@@ -15,14 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.updateAvatar = exports.updateUser = exports.getUser = void 0;
 const joi_1 = __importDefault(require("joi"));
 const db_1 = require("../db");
-const clodinary_1 = require("../libraries/clodinary");
+const cloudinary_1 = require("../libraries/cloudinary");
 const user_1 = require("../models/user");
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
         let data = yield db_1.db.one(user_1.queryGetUser, [id]);
         data = Object.assign(Object.assign({}, data), { avatar: data.avatar
-                ? clodinary_1.cloudinary.url(data.avatar)
+                ? cloudinary_1.cloudinary.url(data.avatar)
                 : `${process.env.BASE_URL_UPLOAD}/avatars/no-photo.jpg` });
         res.status(200).send({
             status: "Success",
@@ -81,7 +81,7 @@ const updateAvatar = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             message: "No upload file",
         });
     }
-    const cloudinary_upload = yield clodinary_1.cloudinary.uploader.upload(req.file.path, {
+    const cloudinary_upload = yield cloudinary_1.cloudinary.uploader.upload(req.file.path, {
         folder: "/dewe_tour/avatars",
         use_filename: true,
         unique_filename: false,

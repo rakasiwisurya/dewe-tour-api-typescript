@@ -229,8 +229,27 @@ export const getTransaction = async (req: Request, res: Response) => {
 };
 
 export const getIncomeTransactions = async (req: Request, res: Response) => {
+  const { offset, limit } = req.query;
+
+  const schema = Joi.object({
+    offset: Joi.number().optional(),
+    limit: Joi.number().optional(),
+  });
+
+  const { error } = schema.validate(req.query);
+
+  if (error) {
+    return res.status(400).send({
+      status: "Failed",
+      message: error.details[0].message,
+    });
+  }
+
+  const newoffset = offset ? offset : 0;
+  const newLimit = limit ? limit : null;
+
   try {
-    const incomeTrips = await db.manyOrNone(queryIncomeTrip);
+    const incomeTrips = await db.manyOrNone(queryIncomeTrip, [newoffset, newLimit]);
 
     if (!incomeTrips.length) {
       return res.status(200).send({

@@ -125,6 +125,8 @@ GROUP BY
   trips.max_quota,
   trips.trip_image_code,
   countries.country_name
+OFFSET $1
+LIMIT $2
 `;
 exports.queryUpdateProofPayment = `
 UPDATE
