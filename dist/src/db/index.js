@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.db = void 0;
 const pg_promise_1 = __importDefault(require("pg-promise"));
+const constants_1 = require("../constants");
 const pgp = (0, pg_promise_1.default)({
 /* Initialization Options */
 });
-exports.db = pgp(`postgres://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
+exports.db = pgp(process.env.DATABASE_URL ? process.env.DATABASE_URL : constants_1.databaseUrl);

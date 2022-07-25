@@ -1,9 +1,8 @@
 import pgPromise from "pg-promise";
+import { databaseUrl } from "../constants";
 
 const pgp = pgPromise({
   /* Initialization Options */
 });
 
-export const db = pgp(
-  `postgres://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
-);
+export const db = pgp(process.env.DATABASE_URL ? process.env.DATABASE_URL : databaseUrl);
