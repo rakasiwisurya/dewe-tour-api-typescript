@@ -3,7 +3,7 @@ import Joi from "joi";
 import moment from "moment-timezone";
 import { db } from "../db";
 import { buildIncrementCode } from "../helpers/buildIncrementCode";
-import { cloudinary } from "../libraries/clodinary";
+import { cloudinary } from "../libraries/cloudinary";
 import {
   queryApproveTransaction,
   queryCountTransactions,

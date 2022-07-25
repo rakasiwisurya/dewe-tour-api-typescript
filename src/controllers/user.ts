@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Joi from "joi";
 import { db } from "../db";
-import { cloudinary } from "../libraries/clodinary";
+import { cloudinary } from "../libraries/cloudinary";
 import { queryDeleteUser, queryGetUser, queryUpdateAvatar, queryUpdateUser } from "../models/user";
 
 export const getUser = async (req: Request, res: Response) => {
