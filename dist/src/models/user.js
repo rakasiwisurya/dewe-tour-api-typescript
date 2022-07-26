@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.queryDeleteUser = exports.queryUpdateAvatar = exports.queryUpdateUser = exports.queryGetUser = exports.queryInsertUser = exports.queryCheckEmail = void 0;
+exports.queryDeleteUser = exports.queryUpdateAvatar = exports.queryUpdateUser = exports.queryGetUser = exports.queryCheckUser = exports.queryInsertUser = exports.queryCheckEmail = void 0;
 exports.queryCheckEmail = `
 SELECT
   *
@@ -22,6 +22,15 @@ RETURNING
   gender_id,
   address,
   role
+`;
+exports.queryCheckUser = `
+SELECT
+  *
+FROM 
+  users
+LEFT JOIN genders ON users.gender_id = genders.gender_id
+WHERE
+  email = $1
 `;
 exports.queryGetUser = `
 SELECT

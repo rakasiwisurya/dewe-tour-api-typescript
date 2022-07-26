@@ -84,19 +84,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     try {
-        const queryCheckUser = `
-      SELECT
-        *
-      FROM 
-        users
-      LEFT JOIN
-        genders
-      ON
-        users.gender_id = genders.gender_id
-      WHERE
-        email = $1
-    `;
-        const user = yield db_1.db.oneOrNone(queryCheckUser, [email]);
+        const user = yield db_1.db.oneOrNone(user_1.queryCheckUser, [email]);
         if (!user) {
             return res.status(400).send({
                 status: "Failed",

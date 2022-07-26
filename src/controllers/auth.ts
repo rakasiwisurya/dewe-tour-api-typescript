@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { db } from "../db";
 import { tokenKey } from "../constants";
-import { queryCheckEmail, queryInsertUser } from "../models/user";
+import { queryCheckEmail, queryCheckUser, queryInsertUser } from "../models/user";
 
 export const register = async (req: Request, res: Response) => {
   const { fullname, email, password, phone, gender_id, address } = req.body;
@@ -82,19 +82,6 @@ export const login = async (req: Request, res: Response) => {
   }
 
   try {
-    const queryCheckUser = `
-      SELECT
-        *
-      FROM 
-        users
-      LEFT JOIN
-        genders
-      ON
-        users.gender_id = genders.gender_id
-      WHERE
-        email = $1
-    `;
-
     const user = await db.oneOrNone(queryCheckUser, [email]);
 
     if (!user) {
