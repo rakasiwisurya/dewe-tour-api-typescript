@@ -97,8 +97,14 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         email = $1
     `;
         const user = yield db_1.db.oneOrNone(queryCheckUser, [email]);
+        if (!user) {
+            return res.status(400).send({
+                status: "Failed",
+                message: "Email or password doesn't correct",
+            });
+        }
         const isValid = yield bcrypt_1.default.compare(password, user.password);
-        if (!user || !isValid) {
+        if (!isValid) {
             return res.status(400).send({
                 status: "Failed",
                 message: "Email or password doesn't correct",

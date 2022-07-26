@@ -96,9 +96,17 @@ export const login = async (req: Request, res: Response) => {
     `;
 
     const user = await db.oneOrNone(queryCheckUser, [email]);
+
+    if (!user) {
+      return res.status(400).send({
+        status: "Failed",
+        message: "Email or password doesn't correct",
+      });
+    }
+
     const isValid = await bcrypt.compare(password, user.password);
 
-    if (!user || !isValid) {
+    if (!isValid) {
       return res.status(400).send({
         status: "Failed",
         message: "Email or password doesn't correct",
