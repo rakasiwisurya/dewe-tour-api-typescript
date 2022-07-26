@@ -24,3 +24,15 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     });
   }
 };
+
+export const adminOnly = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user.role && req.user.role === "admin") {
+    next();
+    return;
+  }
+
+  res.status(403).send({
+    status: "Failed",
+    message: "forbidden",
+  });
+};

@@ -22,6 +22,16 @@ RETURNING
   role
 `;
 
+export const queryCheckUser = `
+SELECT
+  *
+FROM 
+  users
+LEFT JOIN genders ON users.gender_id = genders.gender_id
+WHERE
+  email = $1
+`;
+
 export const queryGetUser = `
 SELECT
   fullname,
