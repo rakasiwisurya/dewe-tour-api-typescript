@@ -9,4 +9,11 @@ const constants_1 = require("../constants");
 const pgp = (0, pg_promise_1.default)({
 /* Initialization Options */
 });
-exports.db = pgp(process.env.DATABASE_URL ? process.env.DATABASE_URL : constants_1.databaseUrl);
+const cn = {
+    connectionString: process.env.DATABASE_URL ? process.env.DATABASE_URL : constants_1.databaseUrl,
+    max: 30,
+    ssl: {
+        rejectUnauthorized: false,
+    },
+};
+exports.db = pgp(cn);
