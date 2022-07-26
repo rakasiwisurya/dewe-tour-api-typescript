@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { auth } from "../middlewares/auth";
+import { adminOnly, auth } from "../middlewares/auth";
 import { uploadFile, uploadFiles } from "../middlewares/fileHandler";
 
 import { login, register } from "../controllers/auth";
@@ -26,18 +26,18 @@ router.post("/login", login);
 router.get("/users/:id", auth, getUser);
 router.put("/users/data/:id", auth, updateUser);
 router.put("/users/image/:id", auth, uploadFile("avatar", "uploads/avatars"), updateAvatar);
-router.delete("/users/:id", auth, deleteUser);
+router.delete("/users/:id", auth, adminOnly, deleteUser);
 
-router.post("/countries", auth, addCountry);
-router.get("/countries", auth, getCountries);
+router.post("/countries", auth, adminOnly, addCountry);
+router.get("/countries", auth, adminOnly, getCountries);
 
-router.post("/trips", auth, uploadFiles("trip_images", "uploads/trips"), addTrip);
+router.post("/trips", auth, adminOnly, uploadFiles("trip_images", "uploads/trips"), addTrip);
 router.get("/trips", getTrips);
 router.get("/trips/:id", getTrip);
-router.delete("/trips/:id", auth, deleteTrip);
+router.delete("/trips/:id", auth, adminOnly, deleteTrip);
 
 router.post("/transactions", auth, addTransaction);
-router.get("/transactions/income_transaction", auth, getIncomeTransactions);
+router.get("/transactions/income_transaction", auth, adminOnly, getIncomeTransactions);
 router.get("/transactions", auth, getTransactions);
 router.get("/transactions/:id", auth, getTransaction);
 router.put(
@@ -46,8 +46,8 @@ router.put(
   uploadFile("proof_payment", "uploads/proofs"),
   uploadProofPayment
 );
-router.put("/transactions/approve/:id", auth, approveTransaction);
-router.put("/transactions/reject/:id", auth, rejectTransaction);
-router.delete("/transactions/:id", auth, deleteTransaction);
+router.put("/transactions/approve/:id", auth, adminOnly, approveTransaction);
+router.put("/transactions/reject/:id", auth, adminOnly, rejectTransaction);
+router.delete("/transactions/:id", auth, adminOnly, deleteTransaction);
 
 export default router;
