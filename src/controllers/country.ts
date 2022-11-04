@@ -20,7 +20,7 @@ export const addCountry = async (req: Request, res: Response) => {
   }
 
   try {
-    const isCountryExist = await db.one(queryGetCountry, [country_name]);
+    const isCountryExist = await db.oneOrNone(queryGetCountry, [country_name]);
 
     if (isCountryExist) {
       return res.status(400).send({
@@ -29,7 +29,7 @@ export const addCountry = async (req: Request, res: Response) => {
       });
     }
 
-    const data = await db.one(queryInsertCountry, [country_name]);
+    const data = await db.oneOrNone(queryInsertCountry, [country_name]);
 
     res.status(201).send({
       status: "Success",
@@ -47,7 +47,7 @@ export const addCountry = async (req: Request, res: Response) => {
 
 export const getCountries = async (req: Request, res: Response) => {
   try {
-    const data = await db.many(queryGetCountries);
+    const data = await db.manyOrNone(queryGetCountries);
     res.status(200).send({
       status: "Success",
       message: "Success get countries",

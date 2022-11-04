@@ -29,14 +29,14 @@ const addCountry = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
     }
     try {
-        const isCountryExist = yield db_1.db.one(country_1.queryGetCountry, [country_name]);
+        const isCountryExist = yield db_1.db.oneOrNone(country_1.queryGetCountry, [country_name]);
         if (isCountryExist) {
             return res.status(400).send({
                 status: "Failed",
                 message: "Country already exist",
             });
         }
-        const data = yield db_1.db.one(country_1.queryInsertCountry, [country_name]);
+        const data = yield db_1.db.oneOrNone(country_1.queryInsertCountry, [country_name]);
         res.status(201).send({
             status: "Success",
             message: "Success add country",
@@ -54,7 +54,7 @@ const addCountry = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.addCountry = addCountry;
 const getCountries = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const data = yield db_1.db.many(country_1.queryGetCountries);
+        const data = yield db_1.db.manyOrNone(country_1.queryGetCountries);
         res.status(200).send({
             status: "Success",
             message: "Success get countries",
