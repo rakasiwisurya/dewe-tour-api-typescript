@@ -115,7 +115,7 @@ exports.addTrip = addTrip;
 const getTrips = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let { keyword, offset, limit } = req.query;
     const schema = joi_1.default.object({
-        keyword: joi_1.default.string().optional(),
+        keyword: joi_1.default.string().empty("").optional(),
         offset: joi_1.default.number().optional(),
         limit: joi_1.default.number().optional(),
     });

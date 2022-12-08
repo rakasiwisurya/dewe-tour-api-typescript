@@ -123,7 +123,7 @@ export const getTrips = async (req: Request, res: Response) => {
   let { keyword, offset, limit }: GetTripsQuery = req.query;
 
   const schema = Joi.object({
-    keyword: Joi.string().optional(),
+    keyword: Joi.string().empty("").optional(),
     offset: Joi.number().optional(),
     limit: Joi.number().optional(),
   });
